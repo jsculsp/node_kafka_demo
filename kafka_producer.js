@@ -1,7 +1,7 @@
-import kafka from 'kafka-node'
-import uuid from 'uuid'
+const kafka = require('kafka-node')
+const uuid = require('uuid')
 
-const client = new kafka.Client('http://localhost:2181', 'my-client-id', {
+const client = new kafka.Client('localhost:2181', 'my-client-id', {
   sessionTimeout: 300,
   spinDelay: 100,
   retries: 2
@@ -49,4 +49,4 @@ const KafkaService = {
   }
 }
 
-export default KafkaService
+exports.default = KafkaService
