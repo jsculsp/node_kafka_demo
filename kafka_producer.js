@@ -1,5 +1,4 @@
 const kafka = require('kafka-node')
-const uuid = require('uuid')
 
 const client = new kafka.Client('localhost:2181', 'my-client-id', {
   sessionTimeout: 300,
@@ -17,36 +16,31 @@ producer.on('error', function (error) {
   console.error(error)
 })
 
-const KafkaService = {
-  sendRecord: ({ type, userId, sessionId, data }, callback = () => {
-  }) => {
-    if (!userId) {
-      return callback(new Error(`A userId must be provided.`))
+const sendRecord = (objData, cb) => {
+  const buffer = new Buffer.from(JSON.stringify(objData))
+
+  // Create a new payload
+  const record = [
+    {
+      topic: 'webevents.dev',
+      messages: buffer,
+      attributes: 1 /* Use GZip compression for the payload */
     }
+  ]
 
-    const event = {
-      id: uuid.v4(),
-      timestamp: Date.now(),
-      userId: userId,
-      sessionId: sessionId,
-      type: type,
-      data: data
-    }
-
-    const buffer = new Buffer.from(JSON.stringify(event))
-
-    // Create a new payload
-    const record = [
-      {
-        topic: 'webevents.dev',
-        messages: buffer,
-        attributes: 1 /* Use GZip compression for the payload */
-      }
-    ]
-
-    //Send record to Kafka and log result/error
-    producer.send(record, callback)
-  }
+  //Send record to Kafka and log result/error
+  producer.send(record, cb)
 }
 
-exports.default = KafkaService
+let times = 0
+
+setInterval(() => {
+  sendRecord({
+    msg: `this is message ${++times}!`
+  }, (err, data) => {
+    if (err) {
+      console.log(`err: ${err}`)
+    }
+    console.log(`data: ${JSON.stringify(data)}`)
+  })
+}, 1000)
